@@ -1,0 +1,17 @@
+{
+  "name": "Little Color Club",
+  "short_name": "Color Club",
+  "description": "A happy little place to color, draw, and create.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#FFFAF2",
+  "theme_color": "#FFFAF2",
+  "orientation": "any",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icons/icon-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
