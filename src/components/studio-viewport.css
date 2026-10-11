@@ -1,0 +1,367 @@
+.studio-viewport-shell {
+  width: 100%;
+  min-width: 0;
+}
+.canvas-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 9px;
+  padding: 8px 3px;
+  background: #fffdf8;
+}
+.canvas-progress-slot {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+.zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: #f0ecf5;
+  border-radius: 11px;
+  padding: 3px;
+  color: #8c7ba5;
+}
+.zoom-controls button {
+  width: 31px;
+  height: 31px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+}
+.zoom-controls button:hover {
+  background: #e6def0;
+}
+.zoom-controls .zoom-fit {
+  width: 67px;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 900;
+}
+.zoom-controls .pan-toggle {
+  margin-left: 3px;
+  background: #e5dbf1;
+}
+.zoom-controls .pan-toggle.selected {
+  background: #8976b6;
+  color: white;
+}
+.canvas-viewport {
+  width: 100%;
+  aspect-ratio: 1;
+  overflow: auto;
+  overscroll-behavior: contain;
+  position: relative;
+  background: white;
+  scrollbar-width: thin;
+  scrollbar-color: #cbbddc #fff;
+}
+.zoomed-picture {
+  position: relative;
+  line-height: 0;
+  transform-origin: 0 0;
+}
+.zoomed-picture .paint-surface {
+  width: 100%;
+}
+.canvas-pan-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  touch-action: none;
+  cursor: grab;
+}
+.canvas-pan-layer:active {
+  cursor: grabbing;
+}
+.canvas-pan-layer > span {
+  position: sticky;
+  display: block;
+  top: 7px;
+  left: 7px;
+  width: max-content;
+  max-width: calc(100vw - 80px);
+  line-height: 1.4;
+  font-size: 10px;
+  padding: 8px 11px;
+  border-radius: 9px;
+  color: #fff;
+  background: #75638bde;
+  box-shadow: 0 2px 10px #27223820;
+  pointer-events: none;
+  margin: 7px;
+}
+.color-progress {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  font-size: 10px;
+  color: #969983;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.color-progress .progress-flower {
+  font-size: 23px;
+  color: #b4c5a1;
+  line-height: 1;
+  transition:
+    color 0.3s,
+    transform 0.35s;
+}
+.color-progress .progress-track {
+  height: 5px;
+  width: 55px;
+  border-radius: 5px;
+  background: #ecece1;
+  overflow: hidden;
+}
+.color-progress .progress-track > span {
+  height: 100%;
+  display: block;
+  border-radius: 5px;
+  background: #a7b792;
+  transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.color-progress.complete .progress-flower {
+  color: #dcb963;
+  transform: rotate(45deg);
+}
+.glow-studio .canvas-navigation {
+  background: #364058;
+}
+.glow-studio .canvas-frame {
+  background: #364058;
+}
+.canvas-frame:has(.studio-viewport-shell) {
+  aspect-ratio: auto;
+  overflow: visible;
+}
+.studio-viewport-shell .canvas-viewport {
+  border-radius: 8px;
+}
+.studio-workspace {
+  padding-top: 8px;
+}
+.canvas-area {
+  width: min(61vh, 680px);
+}
+.finished-preview {
+  border-radius: 18px;
+  background: #fff;
+  border: 7px solid #f0ebdf;
+  max-width: 220px;
+  width: 100%;
+  display: block;
+  margin: 18px auto 23px;
+  box-shadow: 0 5px 20px #8a776215;
+  transform: rotate(-3deg);
+}
+.finished-modal .modal-actions {
+  flex-direction: column;
+}
+.finished-modal .modal-actions button {
+  min-height: 46px;
+}
+.finished-star {
+  font-size: 38px;
+  color: #d7b758;
+  display: inline-block;
+  animation: finished-star 0.6s cubic-bezier(0.2, 1.8, 0.5, 1);
+}
+.finished-modal .finished-caption {
+  font-size: 10px;
+  color: #a9ae9d;
+  margin-top: 16px;
+  margin-bottom: 0;
+}
+.palette .color-swatch .color-remaining {
+  position: absolute;
+  bottom: -9px;
+  right: -5px;
+  font-size: 8px;
+  line-height: 16px;
+  height: 17px;
+  min-width: 17px;
+  padding: 0 3px;
+  border-radius: 8px;
+  background: #fff;
+  color: #5d6b60;
+  border: 1px solid #e4e4dd;
+  font-weight: 900;
+}
+.palette .color-swatch.finished-color {
+  opacity: 0.55;
+}
+.palette .color-swatch.finished-color.selected {
+  opacity: 1;
+}
+.color-swatch.selected {
+  animation: swatch-bounce 0.25s ease-out;
+}
+.tool-button.selected svg {
+  animation: tool-wiggle 0.3s ease-out;
+}
+.studio {
+  animation: studio-enter 0.28s ease-out;
+}
+@keyframes finished-star {
+  from {
+    transform: scale(0.3) rotate(-60deg);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) rotate(0);
+    opacity: 1;
+  }
+}
+@keyframes swatch-bounce {
+  0% {
+    scale: 0.84;
+  }
+  60% {
+    scale: 1.1;
+  }
+  100% {
+    scale: 1;
+  }
+}
+@keyframes tool-wiggle {
+  0% {
+    rotate: -12deg;
+    scale: 0.85;
+  }
+  60% {
+    rotate: 6deg;
+    scale: 1.1;
+  }
+  100% {
+    rotate: 0;
+    scale: 1;
+  }
+}
+@keyframes studio-enter {
+  from {
+    opacity: 0.5;
+    translate: 0 6px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+@media (max-width: 720px) {
+  .canvas-area {
+    width: min(54dvh, 600px);
+  }
+  .zoom-controls button {
+    width: 38px;
+    height: 36px;
+  }
+  .zoom-controls .zoom-fit {
+    width: 67px;
+  }
+  .color-progress {
+    font-size: 9px;
+  }
+  .color-progress .progress-track {
+    width: 35px;
+  }
+  .canvas-navigation {
+    padding-top: 6px;
+    padding-bottom: 6px;
+    gap: 5px;
+  }
+}
+@media (max-width: 480px) {
+  .canvas-area {
+    width: 100%;
+  }
+  .color-progress .progress-track {
+    display: none;
+  }
+  .color-progress {
+    gap: 4px;
+    font-size: 8px;
+  }
+  .color-progress .progress-flower {
+    font-size: 20px;
+  }
+  .zoom-controls {
+    gap: 0;
+    padding: 2px;
+  }
+  .zoom-controls button {
+    width: 34px;
+    height: 36px;
+  }
+  .zoom-controls .zoom-fit {
+    width: 59px;
+    font-size: 9px;
+  }
+  .zoom-controls .pan-toggle {
+    width: 34px;
+    margin-left: 1px;
+  }
+  .canvas-navigation {
+    padding: 5px 0;
+  }
+  .studio-workspace {
+    gap: 10px;
+    padding-top: 0;
+  }
+  .canvas-hint {
+    margin-bottom: 6px;
+  }
+  .palette-panel {
+    margin-top: 0;
+  }
+  .color-swatch {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  .finished-preview {
+    max-width: 185px;
+  }
+}
+@media (max-height: 650px) and (min-width: 721px) {
+  .studio .canvas-area {
+    width: calc(100dvh - 192px);
+  }
+  .studio .canvas-hint,
+  .studio .canvas-footer {
+    display: none;
+  }
+  .canvas-navigation {
+    padding: 3px 0;
+  }
+  .zoom-controls button {
+    width: 24px;
+    height: 25px;
+  }
+  .zoom-controls .zoom-fit {
+    width: 48px;
+    font-size: 8px;
+  }
+  .color-progress > span:not(.progress-flower) {
+    display: none;
+  }
+  .color-progress .progress-track {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .studio,
+  .finished-star,
+  .color-swatch.selected,
+  .tool-button.selected svg {
+    animation: none;
+  }
+  .color-progress .progress-track > span,
+  .color-progress .progress-flower {
+    transition: none;
+  }
+}

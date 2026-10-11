@@ -13,6 +13,23 @@ export function DrawingPreview({
   className,
   fills,
 }: DrawingPreviewProps) {
+  if (
+    drawing.asset &&
+    !drawing.ink &&
+    !drawing.regions.length &&
+    drawing.thumbnail
+  ) {
+    return (
+      <svg
+        viewBox="0 0 800 800"
+        className={className}
+        role="img"
+        aria-label={drawing.title}
+      >
+        <image href={drawing.thumbnail} width="800" height="800" />
+      </svg>
+    );
+  }
   return (
     <svg
       viewBox="0 0 800 800"
@@ -22,7 +39,7 @@ export function DrawingPreview({
       xmlns="http://www.w3.org/2000/svg"
     >
       <g
-        stroke="#394C50"
+        stroke={drawing.ink ? "none" : "#394C50"}
         strokeWidth="9"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -31,6 +48,7 @@ export function DrawingPreview({
           <path
             key={region.id}
             d={region.d}
+            fillRule="evenodd"
             fill={fills?.[region.id] ?? (colored ? region.color : "#FFFFFF")}
           />
         ))}
@@ -38,6 +56,9 @@ export function DrawingPreview({
           <path key={`line-${i}`} d={d} fill="none" />
         ))}
       </g>
+      {drawing.ink && (
+        <path d={drawing.ink} fill="#394C50" fillRule="evenodd" />
+      )}
     </svg>
   );
 }

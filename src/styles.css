@@ -3054,3 +3054,50 @@ input {
     min-height: 66px;
   }
 }
+.picture-loading {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  background: #fffcf2eb;
+  backdrop-filter: blur(8px);
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 24px;
+}
+.picture-loading h2 {
+  font-size: 23px;
+  font-weight: 900;
+  margin: 19px 0 8px;
+}
+.picture-loading p {
+  color: #8d967f;
+  font-size: 14px;
+  margin-bottom: 24px;
+}
+.loading-brush {
+  display: grid;
+  place-items: center;
+  margin: auto;
+  width: 77px;
+  height: 77px;
+  background: #ebe3f3;
+  color: #9a83b5;
+  border-radius: 25px;
+  animation: loading-sway 0.9s ease-in-out infinite alternate;
+}
+@keyframes loading-sway {
+  from {
+    rotate: -12deg;
+    translate: 0 -3px;
+  }
+  to {
+    rotate: 12deg;
+    translate: 0 3px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .loading-brush {
+    animation: none;
+  }
+}

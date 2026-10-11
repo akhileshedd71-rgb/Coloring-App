@@ -19,7 +19,6 @@ import {
   Pencil,
   Plus,
   Redo2,
-  Search,
   Settings2,
   ShieldCheck,
   Sparkles,
@@ -35,8 +34,10 @@ import {
 } from "lucide-react";
 import type { Artwork, Drawing, Mode, Profile, Settings, Tool } from "./types";
 import { PALETTE } from "./types";
-import { categories, drawings, getDrawing } from "./data/drawings";
+import { categories, drawings, getDrawing, loadDrawing } from "./data/drawings";
 import { DrawingPreview } from "./components/DrawingPreview";
+import { DrawingLibrary } from "./components/DrawingLibrary";
+import { StudioViewport } from "./components/StudioViewport";
 import { PaintCanvas } from "./components/PaintCanvas";
 import type { PaintCanvasHandle } from "./components/PaintCanvas";
 import {
@@ -132,6 +133,7 @@ type ModalName =
   | "about"
   | "clear"
   | "delete"
+  | "finished"
   | null;
 const initial = loadPreferences();
 let audioContext: AudioContext | undefined;
@@ -246,8 +248,6 @@ export default function App() {
   const [profileId, setProfileId] = useState(initial.activeProfile);
   const [settings, setSettings] = useState<Settings>(initial.settings);
   const [artworks, setArtworks] = useState<Artwork[]>([]);
-  const [category, setCategory] = useState("All pictures");
-  const [query, setQuery] = useState("");
   const [mode, setMode] = useState<Mode>("fill");
   const [tool, setTool] = useState<Tool>("fill");
   const [color, setColor] = useState(PALETTE[0]);
@@ -255,10 +255,15 @@ export default function App() {
   const [sticker, setSticker] = useState("⭐");
   const [history, setHistory] = useState<Artwork[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
+  const [drawing, setDrawing] = useState<Drawing>();
   const [modal, setModal] = useState<ModalName>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [toast, setToast] = useState("");
   const [celebrate, setCelebrate] = useState(false);
+  const [finishedPreview, setFinishedPreview] = useState("");
+  const [loadingPicture, setLoadingPicture] = useState("");
+  const pictureRequest = useRef(0);
+  const libraryScroll = useRef(0);
   const [gateAnswer, setGateAnswer] = useState("");
   const [gateAction, setGateAction] = useState<"parents" | "share">("parents");
   const [gateError, setGateError] = useState(false);
@@ -273,7 +278,6 @@ export default function App() {
   latestArtRef.current = art;
   const profile = profiles.find((p) => p.id === profileId) || profiles[0];
   const myArt = artworks.filter((a) => a.profileId === profile.id);
-  const drawing = art?.drawingId ? getDrawing(art.drawingId) : undefined;
   const closeModal = useCallback(() => setModal(null), []);
   const notify = useCallback((message: string) => setToast(message), []);
   useEffect(() => {
@@ -349,7 +353,11 @@ export default function App() {
   );
   useEffect(() => {
     const back = (event: Event) => {
-      if (modal) {
+      if (loadingPicture) {
+        event.preventDefault();
+        pictureRequest.current++;
+        setLoadingPicture("");
+      } else if (modal) {
         event.preventDefault();
         setModal(null);
       } else if (page !== "home") {
@@ -362,7 +370,7 @@ export default function App() {
     };
     window.addEventListener("android-back", back);
     return () => window.removeEventListener("android-back", back);
-  }, [page, modal, menuOpen, leaveStudio]);
+  }, [page, modal, menuOpen, loadingPicture, leaveStudio]);
   function changeArt(next: Artwork) {
     const updated = { ...next, updatedAt: Date.now() };
     latestArtRef.current = updated;
@@ -376,14 +384,35 @@ export default function App() {
     );
     setHistoryIndex(Math.min(historyIndex + 1, 59));
   }
-  function openArt(next: Artwork) {
-    setHistory([next]);
-    setHistoryIndex(0);
-    setMode(next.mode);
-    setTool(next.mode === "fill" || next.mode === "number" ? "fill" : "brush");
-    setPage("studio");
-    setMenuOpen(false);
-    window.scrollTo(0, 0);
+  async function openArt(next: Artwork) {
+    const request = ++pictureRequest.current;
+    if (page === "home") libraryScroll.current = window.scrollY;
+    setLoadingPicture(next.title);
+    try {
+      const pageDrawing = next.drawingId
+        ? await loadDrawing(next.drawingId)
+        : undefined;
+      if (request !== pictureRequest.current) return;
+      // Keep the open page alive independently of the browsing cache. A late,
+      // cancelled request may rotate that cache while this child is coloring.
+      setDrawing(pageDrawing);
+      setHistory([next]);
+      setHistoryIndex(0);
+      setMode(next.mode);
+      setTool(
+        next.mode === "fill" || next.mode === "number" ? "fill" : "brush",
+      );
+      if (next.mode === "number" && pageDrawing)
+        setColor(PALETTE[(pageDrawing.regions[0]?.number || 1) - 1]);
+      setPage("studio");
+      setMenuOpen(false);
+      window.scrollTo(0, 0);
+    } catch {
+      if (request === pictureRequest.current)
+        notify("This picture could not be opened. Please try another one.");
+    } finally {
+      if (request === pictureRequest.current) setLoadingPicture("");
+    }
   }
   function startDrawing(item?: Drawing, selectedMode = mode) {
     openArt({
@@ -402,8 +431,6 @@ export default function App() {
       stickers: [],
       updatedAt: Date.now(),
     });
-    if (selectedMode === "number" && item)
-      setColor(PALETTE[(item.regions[0]?.number || 1) - 1]);
   }
   function chooseMode(next: Mode) {
     setMode(next);
@@ -437,9 +464,10 @@ export default function App() {
     if (!art) return;
     try {
       await persist(art, canvasRef.current?.exportThumbnail());
+      setFinishedPreview(canvasRef.current?.exportThumbnail() || "");
+      setModal("finished");
       setCelebrate(true);
       window.setTimeout(() => setCelebrate(false), 1800);
-      notify("Ta-da! Your masterpiece is safe in My art.");
     } catch {
       notify(
         "We could not save this picture. Please check your device storage.",
@@ -457,13 +485,20 @@ export default function App() {
       );
     }
   }
-  const filtered = drawings.filter(
-    (d) =>
-      (category === "All pictures" || d.category === category) &&
-      (settings.difficulty !== "easy" || d.difficulty === "easy") &&
-      d.title.toLowerCase().includes(query.toLowerCase()),
-  );
+  useEffect(() => {
+    if (page === "home" && libraryScroll.current > 0) {
+      const frame = requestAnimationFrame(() =>
+        window.scrollTo(0, libraryScroll.current),
+      );
+      return () => cancelAnimationFrame(frame);
+    }
+  }, [page]);
   const modeInfo = modes.find((m) => m.id === mode)!;
+  const featured =
+    settings.difficulty === "all"
+      ? drawings[0]
+      : drawings.find((item) => item.difficulty === settings.difficulty) ||
+        drawings[0];
 
   return (
     <div className={`app ${page === "studio" ? "is-studio" : ""}`}>
@@ -589,13 +624,13 @@ export default function App() {
                       Little artists<span className="coral-period">.</span>
                     </h2>
                     <p>
-                      A world of pictures, a rainbow of colors,
+                      {drawings.length} little adventures, a rainbow of colors,
                       <br className="desktop-break" /> and a little magic from
                       you.
                     </p>
                     <button
                       className="primary-button"
-                      onClick={() => startDrawing(drawings[0], "fill")}
+                      onClick={() => startDrawing(featured, "fill")}
                     >
                       Let's make some magic <ArrowRight size={20} />
                     </button>
@@ -613,7 +648,7 @@ export default function App() {
                     <span className="art-sparkle two">✦</span>
                     <div className="drawing-paper">
                       <span className="paper-tape" />
-                      <DrawingPreview drawing={drawings[0]} colored />
+                      <DrawingPreview drawing={featured} colored />
                       <span className="paper-caption">
                         made with a little love ♡
                       </span>
@@ -674,117 +709,19 @@ export default function App() {
                     ))}
                   </div>
                 </section>
-                <section className="library" ref={libraryRef}>
-                  <div className="section-heading library-heading">
-                    <div>
-                      <h2>
-                        Find your next masterpiece{" "}
-                        <span className="heading-star">✦</span>
-                      </h2>
-                      <p>
-                        {mode === "number"
-                          ? "A little number matching, a whole lot of color."
-                          : mode === "paint"
-                            ? "Bring a picture to life with your favorite tools."
-                            : "Big adventures start with a little color."}
-                      </p>
-                    </div>
-                    <label className="search">
-                      <Search size={18} />
-                      <input
-                        aria-label="Find a picture"
-                        placeholder="Find a picture…"
-                        value={query}
-                        onChange={(e) => setQuery(e.target.value)}
-                      />
-                      {query && (
-                        <button
-                          aria-label="Clear search"
-                          onClick={() => setQuery("")}
-                        >
-                          <X size={15} />
-                        </button>
-                      )}
-                    </label>
-                  </div>
-                  <div className="category-row" aria-label="Picture categories">
-                    {["All pictures", ...categories].map((c, i) => (
-                      <button
-                        key={c}
-                        className={category === c ? "selected" : ""}
-                        onClick={() => setCategory(c)}
-                      >
-                        <span>
-                          {["✦", "🐰", "🐠", "🌿", "🚀", "🍓", "🚗", "🦄"][i]}
-                        </span>
-                        {c}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="drawing-grid">
-                    {filtered.map((d, index) => (
-                      <button
-                        className="drawing-card"
-                        key={d.id}
-                        onClick={() =>
-                          startDrawing(
-                            d,
-                            mode === "draw" || mode === "glow" ? "fill" : mode,
-                          )
-                        }
-                      >
-                        <div
-                          className="drawing-thumbnail"
-                          style={{ background: d.accent }}
-                        >
-                          <DrawingPreview drawing={d} />
-                          {index === 0 &&
-                            category === "All pictures" &&
-                            !query && (
-                              <span className="favorite-tag">
-                                <Heart size={11} fill="currentColor" /> A little
-                                favorite
-                              </span>
-                            )}
-                          <span className="draw-cta">
-                            <ArrowRight size={19} />
-                          </span>
-                        </div>
-                        <div className="drawing-card-info">
-                          <div>
-                            <h3>{d.title}</h3>
-                            <span>{d.category}</span>
-                          </div>
-                          <span className={`difficulty ${d.difficulty}`}>
-                            {d.difficulty === "easy"
-                              ? "Easy peasy"
-                              : "A little adventure"}
-                          </span>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                  {filtered.length === 0 && (
-                    <div className="empty-state">
-                      <Search size={40} />
-                      <h3>No pictures found</h3>
-                      <p>Try another word or explore a different category.</p>
-                      <button
-                        className="secondary-button"
-                        onClick={() => {
-                          setQuery("");
-                          setCategory("All pictures");
-                        }}
-                      >
-                        See all pictures
-                      </button>
-                    </div>
-                  )}
-                  <div className="library-footer">
-                    <span>✿</span> Every masterpiece starts with “let’s try.”{" "}
-                    <span>✿</span>
-                  </div>
-                </section>
+                <DrawingLibrary
+                  ref={libraryRef}
+                  drawings={drawings}
+                  categories={categories}
+                  mode={mode}
+                  difficultyLimit={settings.difficulty}
+                  onChoose={(item) =>
+                    startDrawing(
+                      item,
+                      mode === "draw" || mode === "glow" ? "fill" : mode,
+                    )
+                  }
+                />
               </div>
             ) : (
               <section className="gallery-page">
@@ -990,25 +927,60 @@ export default function App() {
                 )}
               </div>
               <div className="canvas-frame">
-                <PaintCanvas
-                  ref={canvasRef}
-                  artwork={art}
-                  drawing={drawing}
-                  tool={tool}
-                  color={color}
-                  size={size}
-                  sticker={sticker}
-                  hints={settings.hints}
-                  onChange={changeArt}
-                  onWrongColor={() =>
-                    notify(
-                      "Find the color with the same number. You’ve got this!",
+                <StudioViewport
+                  resetKey={art.id}
+                  toolbar={
+                    drawing && (mode === "fill" || mode === "number") ? (
+                      <div
+                        className={`color-progress ${drawing.regions.every((r) => art.fills[r.id]) ? "complete" : ""}`}
+                        aria-label={`${drawing.regions.filter((r) => art.fills[r.id]).length} of ${drawing.regions.length} spaces colored`}
+                      >
+                        <span className="progress-flower" aria-hidden="true">
+                          ✿
+                        </span>
+                        <span>
+                          {
+                            drawing.regions.filter((r) => art.fills[r.id])
+                              .length
+                          }{" "}
+                          / {drawing.regions.length}
+                        </span>
+                        <div className="progress-track">
+                          <span
+                            style={{
+                              width: `${(drawing.regions.filter((r) => art.fills[r.id]).length / drawing.regions.length) * 100}%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="color-progress">
+                        <span className="progress-flower">✦</span>
+                        <span>Make it yours</span>
+                      </div>
                     )
                   }
-                  onPaint={() => {
-                    if (settings.sound) playNote();
-                  }}
-                />
+                >
+                  <PaintCanvas
+                    ref={canvasRef}
+                    artwork={art}
+                    drawing={drawing}
+                    tool={tool}
+                    color={color}
+                    size={size}
+                    sticker={sticker}
+                    hints={settings.hints}
+                    onChange={changeArt}
+                    onWrongColor={() =>
+                      notify(
+                        "Find the color with the same number. You’ve got this!",
+                      )
+                    }
+                    onPaint={() => {
+                      if (settings.sound) playNote();
+                    }}
+                  />
+                </StudioViewport>
                 {celebrate && (
                   <div className="celebration" aria-hidden="true">
                     {["⭐", "✨", "🌸", "💛", "🌈", "✦", "⭐"].map((s, i) => (
@@ -1078,26 +1050,42 @@ export default function App() {
               </div>
             ) : (
               <div className="palette" aria-label="Choose a color">
-                {PALETTE.map((c, i) => (
-                  <button
-                    key={c}
-                    className={`color-swatch ${color === c ? "selected" : ""}`}
-                    style={{ "--swatch": c } as React.CSSProperties}
-                    onClick={() => setColor(c)}
-                    aria-label={`${colorNames[i]}${mode === "number" ? ` number ${i + 1}` : ""}`}
-                    aria-pressed={color === c}
-                  >
-                    {mode === "number" ? (
-                      <span style={{ color: i === 9 ? "#FFF" : "#263F43" }}>
-                        {i + 1}
-                      </span>
-                    ) : (
-                      color === c && (
-                        <Check size={23} color={i === 9 ? "#FFF" : "#263F43"} />
-                      )
-                    )}
-                  </button>
-                ))}
+                {PALETTE.map((c, i) => ({ c, i }))
+                  .filter(
+                    ({ i }) =>
+                      mode !== "number" ||
+                      drawing?.regions.some((r) => r.number === i + 1),
+                  )
+                  .map(({ c, i }) => (
+                    <button
+                      key={c}
+                      className={`color-swatch ${color === c ? "selected" : ""} ${mode === "number" && drawing?.regions.filter((r) => r.number === i + 1).every((r) => art.fills[r.id]) ? "finished-color" : ""}`}
+                      style={{ "--swatch": c } as React.CSSProperties}
+                      onClick={() => setColor(c)}
+                      aria-label={`${colorNames[i]}${mode === "number" ? ` number ${i + 1}` : ""}`}
+                      aria-pressed={color === c}
+                    >
+                      {mode === "number" ? (
+                        <span style={{ color: i === 9 ? "#FFF" : "#263F43" }}>
+                          {i + 1}
+                        </span>
+                      ) : (
+                        color === c && (
+                          <Check
+                            size={23}
+                            color={i === 9 ? "#FFF" : "#263F43"}
+                          />
+                        )
+                      )}
+                      {mode === "number" && drawing && (
+                        <span className="color-remaining" aria-hidden="true">
+                          {drawing.regions.filter(
+                            (r) => r.number === i + 1 && !art.fills[r.id],
+                          ).length || "✓"}
+                        </span>
+                      )}
+                    </button>
+                  ))}
               </div>
             )}
             {tool !== "fill" && tool !== "sticker" && (
@@ -1124,6 +1112,61 @@ export default function App() {
             </button>
           </footer>
         </main>
+      )}
+      {loadingPicture && (
+        <div className="picture-loading" role="status">
+          <div>
+            <span className="loading-brush">
+              <Paintbrush size={34} />
+            </span>
+            <h2>Opening a little adventure…</h2>
+            <p>{loadingPicture}</p>
+            <button
+              className="secondary-button"
+              onClick={() => {
+                pictureRequest.current++;
+                setLoadingPicture("");
+              }}
+            >
+              Back to pictures
+            </button>
+          </div>
+        </div>
+      )}
+      {modal === "finished" && (
+        <Modal title="Your little masterpiece" onClose={closeModal}>
+          <div className="finished-modal">
+            <span className="finished-star" aria-hidden="true">
+              ✦
+            </span>
+            <h2>Look what you made!</h2>
+            <p>A little color. A whole lot of you.</p>
+            {finishedPreview && (
+              <img
+                className="finished-preview"
+                src={finishedPreview}
+                alt="Your finished artwork"
+              />
+            )}
+            <div className="modal-actions">
+              <button
+                className="primary-button"
+                onClick={() => {
+                  closeModal();
+                  void leaveStudio();
+                }}
+              >
+                Pick another picture <ArrowRight size={18} />
+              </button>
+              <button className="secondary-button" onClick={closeModal}>
+                Keep coloring <Paintbrush size={17} />
+              </button>
+            </div>
+            <p className="finished-caption">
+              <ShieldCheck size={12} /> Safely tucked away in My art
+            </p>
+          </div>
+        </Modal>
       )}
       {modal === "gate" && (
         <Modal title="Grown-up check" onClose={closeModal}>
@@ -1255,7 +1298,9 @@ export default function App() {
               }
             >
               <option value="all">All pictures</option>
-              <option value="easy">Easy peasy only</option>
+              <option value="easy">Easy pictures</option>
+              <option value="medium">Medium pictures</option>
+              <option value="hard">Hard pictures</option>
             </select>
           </div>
           <div className="profile-management">
@@ -1379,7 +1424,7 @@ export default function App() {
           <div className="about-features">
             <span>
               <BookOpen />
-              35 original coloring pages
+              {drawings.length} original coloring pages
             </span>
             <span>
               <Palette />5 imaginative ways to play
@@ -1394,7 +1439,7 @@ export default function App() {
             </span>
           </div>
           <p className="fine-print">
-            An original independent app. No account needed. Version 1.0.0.
+            An original independent app. No account needed. Version 1.1.0.
           </p>
         </Modal>
       )}

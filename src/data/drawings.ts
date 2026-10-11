@@ -1,4 +1,5 @@
 import { PALETTE } from "../types";
+import illustratedIndex from "./illustrated.json" with { type: "json" };
 import type { Drawing, Region } from "../types";
 
 // Original, hand-drawn vector pages. Every closed shape is a separate paint region.
@@ -59,7 +60,7 @@ function page(
   };
 }
 
-export const categories = [
+const originalCategories = [
   "Animals",
   "Ocean",
   "Nature",
@@ -69,7 +70,7 @@ export const categories = [
   "Magic",
 ];
 
-export const drawings: Drawing[] = [
+const classicDrawings: Drawing[] = [
   page(
     "bunny",
     "Happy bunny",
@@ -1289,5 +1290,44 @@ export const drawings: Drawing[] = [
   ),
 ];
 
+export const drawings: Drawing[] = [
+  ...classicDrawings,
+  ...(illustratedIndex as Drawing[]),
+];
+export const categories = [
+  ...new Set([...originalCategories, ...drawings.map((item) => item.category)]),
+];
+const catalog = new Map(drawings.map((item) => [item.id, item]));
+const detailCache = new Map<string, Drawing>();
+const requests = new Map<string, Promise<Drawing>>();
 export const getDrawing = (id: string): Drawing =>
-  drawings.find((drawing) => drawing.id === id) ?? drawings[0];
+  detailCache.get(id) ?? catalog.get(id) ?? classicDrawings[0];
+
+/** Detailed pages are bundled offline, but parsed only when opened to keep startup light. */
+export function loadDrawing(id: string): Promise<Drawing> {
+  const cached = getDrawing(id);
+  if (!cached.asset || cached.regions.length) return Promise.resolve(cached);
+  const pending = requests.get(id);
+  if (pending) return pending;
+  const request = fetch(cached.asset)
+    .then((response) => {
+      if (!response.ok) throw new Error("Picture could not be opened");
+      return response.json();
+    })
+    .then((page: Drawing) => {
+      if (
+        page.id !== id ||
+        !Array.isArray(page.regions) ||
+        !page.regions.length ||
+        typeof page.ink !== "string"
+      )
+        throw new Error("Invalid picture data");
+      detailCache.set(id, page);
+      while (detailCache.size > 8)
+        detailCache.delete(detailCache.keys().next().value!);
+      return page;
+    })
+    .finally(() => requests.delete(id));
+  requests.set(id, request);
+  return request;
+}

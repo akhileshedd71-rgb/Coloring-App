@@ -5,6 +5,9 @@ import { readFile } from "node:fs/promises";
 async function openBunny(page: Page) {
   await page.goto("/");
   await page
+    .getByRole("textbox", { name: "Find a picture" })
+    .fill("Happy bunny");
+  await page
     .locator(".drawing-card")
     .filter({
       has: page.getByRole("heading", { name: "Happy bunny", exact: true }),
@@ -119,6 +122,22 @@ test("sharing requires the grown-up answer and exports a full-resolution PNG", a
     .evaluate((canvas: HTMLCanvasElement) => [canvas.width, canvas.height]);
   expect([png.readUInt32BE(16), png.readUInt32BE(20)]).toEqual(canvasSize);
   expect(canvasSize[0]).toBeGreaterThanOrEqual(800);
+  const exportedBelly = await page.evaluate(
+    async (source) => {
+      const image = new Image();
+      image.src = source;
+      await image.decode();
+      const exported = document.createElement("canvas");
+      exported.width = image.naturalWidth;
+      exported.height = image.naturalHeight;
+      const context = exported.getContext("2d")!;
+      context.drawImage(image, 0, 0);
+      const density = exported.width / 800;
+      return [...context.getImageData(400 * density, 560 * density, 1, 1).data];
+    },
+    `data:image/png;base64,${png.toString("base64")}`,
+  );
+  expect(exportedBelly).toEqual([133, 204, 140, 255]);
   await expect(gate).toHaveCount(0);
   await expect(
     page.getByRole("dialog", { name: "Grown-up corner", exact: true }),

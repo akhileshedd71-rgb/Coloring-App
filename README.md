@@ -4,32 +4,38 @@ A happy, offline coloring app for little artists, built for Android phones and t
 
 <p align="center">
   <img src="docs/home.png" width="280" alt="Little Color Club home screen" />
-  <img src="docs/painting.png" width="280" alt="A colorful rabbit in the painting studio" />
+  <img src="docs/library.png" width="280" alt="Illustrated coloring pages with easy, medium, and hard filters" />
+  <img src="docs/painting.png" width="280" alt="The coloring studio with painting and zoom controls" />
 </p>
 
 ## Try it on Android
 
-**[Download the test APK](https://github.com/akhileshedd71-rgb/Coloring-App/raw/refs/heads/main/downloads/little-color-club-debug.apk)**
+**[Download the v1.1.0 test APK](https://github.com/akhileshedd71-rgb/Coloring-App/raw/refs/heads/main/downloads/little-color-club-debug.apk)**
 
 Open that link on your Android device, download the APK, and open it to install. Android may ask you to allow installation from your browser or file manager. This is a debug-signed test build, suitable for trying the app; it is not a Play Store release. Android 6.0+ with an up-to-date Android System WebView is required. Android 7+ is recommended.
 
-The `downloads/` folder contains the initial test build and its SHA-256 checksum. Subsequent pushes also produce an APK under **Actions → Test and build Android → Artifacts**. Build from source for the most recent changes.
+The `downloads/` folder contains the v1.1.0 test build and its SHA-256 checksum. Pushes also produce an APK under **Actions → Test and build Android → Artifacts**.
 
 ## What's inside
 
-- **35 original coloring pages** across Animals, Ocean, Nature, Space, Yummy, On the go, and Magic; 395 individual fillable regions.
-- **Tap & color:** tap any space to fill it.
+- **147 coloring pages:** 112 new original generated illustrations alongside 35 classic vector drawings. Explore nine categories: Animals, Ocean, Nature, Space, Yummy, On the go, Magic, Dinosaurs, and Adventure.
+- **Easy, medium, and hard:** choose a level, browse categories, or search. Pages appear in batches of 24, and the library remembers your filters when you return from coloring. A grown-up can limit the library to one exact difficulty level.
+- **Tap & color:** fill enclosed spaces with a spreading color animation and a small burst of sparkles.
 - **Magic paint:** smooth brushes, textured crayons, sparkly paint, 12 stickers, and an eraser.
 - **Free draw:** a blank canvas for anything children imagine.
 - **Glow party:** glowing strokes on a night-blue canvas.
-- **Color by number:** match palette numbers to their spaces, with gentle feedback and optional hints.
+- **Color by number:** only the colors used in the picture appear in the palette. Match numbered spaces, follow gentle tap feedback, and turn hints on or off.
 - Eleven colors, three brush sizes, undo/redo, and a reversible fresh start.
+- Zoom from **1× to 3×** for smaller details. Use the hand button to move around the picture, the pencil to continue coloring, and Fit to return to the whole page.
+- An **All done!** celebration shows the saved picture, with a choice to keep coloring or pick another adventure. Reduced-motion preferences turn off the animated effects.
 - Automatic local saving, a gallery, and PNG export. Android uses the native share sheet; browser testing downloads a PNG. Sharing is behind a grown-up check.
 - Up to six local profiles with separate galleries, saved-creation counts, picture progress, and difficulty settings.
 - Parent gate, optional quiet sound effects (off by default), no vibration, and reduced-motion support.
 - Portrait and landscape layouts for phones, tablets, and desktop development.
 
 All fonts, illustrations, and code ship inside the APK. No network connection is needed. The app does not request Internet or storage permissions. Artwork lives in IndexedDB and settings/nicknames in local storage. Android backup is disabled. Uninstalling the app or clearing its data deletes local artwork, so share favorite pictures to keep an external copy. Android sharing sends only the picture you explicitly choose to the app you select.
+
+Illustrated pages use lightweight SVG thumbnails in the library. Detailed paint regions load from bundled local assets when a picture opens, keeping the larger collection quick to browse. The original source artwork, tracing instructions, and review audit are available in [artwork/](artwork/README.md).
 
 This is an original independent app; it is not affiliated with RV AppStudios and does not claim a Teacher Approved badge or Play Store certification.
 
@@ -88,14 +94,20 @@ npm run build
 cd android && ./gradlew assembleDebug lintDebug
 ```
 
-Browser tests exercise real canvas pixels, color matching, brush/eraser behavior, undo/redo, glow, stickers, touchscreen scaling, persistence, filters, profiles, and the parent gate. The CI workflow runs these checks and builds an installable APK. Android runtime behavior still needs testing on a physical device or emulator, especially sharing and system navigation.
+Browser tests exercise real canvas pixels, generated fill regions, color matching, brush/eraser behavior, undo/redo, glow, stickers, zoom and panning, reduced motion, completion previews, touchscreen scaling, persistence, paginated filters, profiles, and the parent gate. The CI workflow runs these checks and builds an installable APK. Android runtime behavior still needs testing on a physical device or emulator, especially sharing and system navigation.
 
 ## Project guide
 
 - `src/App.tsx` — navigation, profiles, studio controls, gallery, and parent settings.
 - `src/components/PaintCanvas.tsx` — touch canvas, region hit testing, ink/outline composition, PNG export.
+- `src/components/DrawingLibrary.tsx` — categories, exact difficulty filters, search, and incremental page loading.
+- `src/components/StudioViewport.tsx` — zoom, panning, and Fit controls.
 - `src/lib/paint.ts` — deterministic brush textures and glow rendering.
-- `src/data/drawings.ts` — original vector drawing library.
+- `src/data/drawings.ts` — classic vector drawings, combined catalog, and lazy illustration loading.
+- `src/data/illustrated.json` — generated illustration metadata; detailed regions stay outside the JavaScript bundle.
+- `public/drawings/` — bundled SVG thumbnails and JSON paint regions.
+- `artwork/` — original generated source atlases, manifest, tracing dependencies, and review audit.
+- `scripts/trace-illustrations.py` — optional artwork regeneration; Python is not needed to develop, build, or run the app.
 - `src/lib/storage.ts` — local persistence.
 - `src/lib/export.ts` — native share and browser export.
 - `android/` — Capacitor Android shell and Gradle wrapper.

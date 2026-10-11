@@ -1,7 +1,11 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
+import { categories, drawings } from "../src/data/drawings";
+
+const initialPageCount = Math.min(24, drawings.length);
 
 async function openPicture(page: Page, title: string) {
+  await page.getByRole("textbox", { name: "Find a picture" }).fill(title);
   await page
     .locator(".drawing-card")
     .filter({ has: page.getByRole("heading", { name: title, exact: true }) })
@@ -75,11 +79,36 @@ async function enterParents(page: Page, tryWrongAnswer = false) {
   ).toBeVisible();
 }
 
-async function finishAndLeave(page: Page) {
+async function finishAndLeave(page: Page, useCompletionAction = false) {
   await page.getByRole("button", { name: "All done!", exact: true }).click();
-  await expect(page.getByRole("status")).toContainText(
-    "Your masterpiece is safe in My art",
-  );
+  const finished = page.getByRole("dialog", {
+    name: "Your little masterpiece",
+    exact: true,
+  });
+  await expect(finished).toBeVisible();
+  await expect(
+    finished.getByRole("heading", { name: "Look what you made!" }),
+  ).toBeVisible();
+  await expect(
+    finished.getByRole("img", { name: "Your finished artwork" }),
+  ).toHaveAttribute("src", /^data:image\/png;base64,/);
+  await expect(finished).toContainText("Safely tucked away in My art");
+  if (useCompletionAction) {
+    await finished
+      .getByRole("button", { name: "Pick another picture", exact: true })
+      .click();
+    await expect(
+      page.getByRole("heading", { name: "A world of little masterpieces" }),
+    ).toBeVisible();
+    return;
+  }
+  await finished
+    .getByRole("button", { name: "Keep coloring", exact: true })
+    .click();
+  await expect(finished).toHaveCount(0);
+  await expect(
+    page.getByRole("img", { name: "Coloring canvas" }),
+  ).toBeVisible();
   await page
     .getByRole("button", { name: "Back to all pictures", exact: true })
     .click();
@@ -103,28 +132,37 @@ async function expectNoHorizontalOverflow(page: Page) {
   expect(dimensions.body).toBeLessThanOrEqual(dimensions.width);
 }
 
-test("the 35-page library supports all categories, search, and empty-state recovery", async ({
+test("the expanded library supports all categories, search, and empty-state recovery", async ({
   page,
 }) => {
   await page.goto("/");
-  await expect(page.locator(".drawing-card")).toHaveCount(35);
-  const categories = [
-    "Animals",
-    "Ocean",
-    "Nature",
-    "Space",
-    "Yummy",
-    "On the go",
-    "Magic",
-  ];
+  expect(drawings.length).toBeGreaterThanOrEqual(135);
+  expect(
+    drawings.filter((drawing) => drawing.source === "illustrated").length,
+  ).toBeGreaterThanOrEqual(100);
+  await expect(
+    page.getByRole("heading", { name: "A world of little masterpieces" }),
+  ).toBeVisible();
+  await expect(page.locator(".drawing-card")).toHaveCount(initialPageCount);
+  await expect(page.locator(".dl-results-heading")).toContainText(
+    `Showing ${initialPageCount} of ${drawings.length} pictures`,
+  );
   for (const category of categories) {
+    const expected = drawings.filter(
+      (drawing) => drawing.category === category,
+    ).length;
     await page
       .locator(".category-row")
-      .getByRole("button", { name: category })
+      .getByRole("button", { name: category, exact: true })
       .click();
-    await expect(page.locator(".drawing-card")).toHaveCount(5);
+    await expect(page.locator(".drawing-card")).toHaveCount(
+      Math.min(24, expected),
+    );
+    await expect(page.locator(".dl-results-heading")).toContainText(
+      `Showing ${Math.min(24, expected)} of ${expected} pictures`,
+    );
     await expect(page.locator(".drawing-card-info > div > span")).toHaveText(
-      Array(5).fill(category),
+      Array(Math.min(24, expected)).fill(category),
     );
   }
   await page
@@ -132,12 +170,26 @@ test("the 35-page library supports all categories, search, and empty-state recov
     .getByRole("button", { name: "All pictures" })
     .click();
   await page.getByRole("textbox", { name: "Find a picture" }).fill("BUNNY");
-  await expect(page.locator(".drawing-card")).toHaveCount(1);
-  await expect(page.locator(".drawing-card").getByRole("heading")).toHaveText(
-    "Happy bunny",
+  const bunnyPages = drawings
+    .filter((drawing) =>
+      `${drawing.title} ${drawing.category}`.toLowerCase().includes("bunny"),
+    )
+    .sort(
+      (a, b) =>
+        Number(b.source === "illustrated") - Number(a.source === "illustrated"),
+    )
+    .slice(0, 24);
+  await expect(page.locator(".drawing-card")).toHaveCount(bunnyPages.length);
+  await expect(page.locator(".drawing-card h3")).toHaveText(
+    bunnyPages.map((drawing) => drawing.title),
   );
+  await expect(
+    page
+      .locator(".drawing-card")
+      .getByRole("heading", { name: "Happy bunny", exact: true }),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Clear search" }).click();
-  await expect(page.locator(".drawing-card")).toHaveCount(35);
+  await expect(page.locator(".drawing-card")).toHaveCount(initialPageCount);
   await page
     .getByRole("textbox", { name: "Find a picture" })
     .fill("not-a-real-picture");
@@ -145,7 +197,7 @@ test("the 35-page library supports all categories, search, and empty-state recov
     page.getByRole("heading", { name: "No pictures found" }),
   ).toBeVisible();
   await page.getByRole("button", { name: "See all pictures" }).click();
-  await expect(page.locator(".drawing-card")).toHaveCount(35);
+  await expect(page.locator(".drawing-card")).toHaveCount(initialPageCount);
 });
 
 test("a colored picture and its gallery thumbnail survive reload", async ({
@@ -158,7 +210,7 @@ test("a colored picture and its gallery thumbnail survive reload", async ({
   await expect
     .poll(() => canvasPixel(page, 400, 560))
     .toEqual([133, 204, 140, 255]);
-  await finishAndLeave(page);
+  await finishAndLeave(page, true);
   await openGallery(page);
   await expect(page.locator(".saved-art-card")).toHaveCount(1);
   await expect(
@@ -246,12 +298,13 @@ test("easy-only difficulty hides the more detailed page and persists after reloa
   page,
 }) => {
   await page.goto("/");
+  await page
+    .getByRole("textbox", { name: "Find a picture" })
+    .fill("Mermaid magic");
   await expect(
-    page
-      .locator(".drawing-card")
-      .filter({
-        has: page.getByRole("heading", { name: "Mermaid magic", exact: true }),
-      }),
+    page.locator(".drawing-card").filter({
+      has: page.getByRole("heading", { name: "Mermaid magic", exact: true }),
+    }),
   ).toHaveCount(1);
   await enterParents(page);
   const parents = page.getByRole("dialog", {
@@ -260,25 +313,47 @@ test("easy-only difficulty hides the more detailed page and persists after reloa
   });
   await parents
     .getByRole("combobox", { name: "Picture difficulty" })
-    .selectOption("easy");
+    .selectOption({ label: "Easy pictures" });
   await parents.getByRole("button", { name: "Close dialog" }).click();
-  await expect(page.locator(".drawing-card")).toHaveCount(34);
-  await expect(page.locator(".drawing-card .difficulty.medium")).toHaveCount(0);
+  await expect(page.locator(".drawing-card")).toHaveCount(0);
   await expect(
-    page
-      .locator(".drawing-card")
-      .filter({
-        has: page.getByRole("heading", { name: "Mermaid magic", exact: true }),
-      }),
+    page.locator(".drawing-card").filter({
+      has: page.getByRole("heading", { name: "Mermaid magic", exact: true }),
+    }),
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "Clear search" }).click();
+  const easyCount = drawings.filter(
+    (drawing) => drawing.difficulty === "easy",
+  ).length;
+  await expect(page.locator(".drawing-card")).toHaveCount(
+    Math.min(24, easyCount),
+  );
+  await expect(page.locator(".dl-results-heading")).toContainText(
+    `Showing ${Math.min(24, easyCount)} of ${easyCount} pictures`,
+  );
+  await expect(
+    page.locator(".drawing-card .difficulty:not(.easy)"),
   ).toHaveCount(0);
   await page.reload();
-  await expect(page.locator(".drawing-card")).toHaveCount(34);
+  await expect(page.locator(".drawing-card")).toHaveCount(
+    Math.min(24, easyCount),
+  );
+  await expect(page.locator(".dl-parent-note")).toContainText("easy pictures");
   await enterParents(page);
   await parents
     .getByRole("combobox", { name: "Picture difficulty" })
     .selectOption("all");
   await parents.getByRole("button", { name: "Close dialog" }).click();
-  await expect(page.locator(".drawing-card")).toHaveCount(35);
+  await expect(page.locator(".drawing-card")).toHaveCount(initialPageCount);
+  await expect(page.locator(".dl-results-heading")).toContainText(
+    `Showing ${initialPageCount} of ${drawings.length} pictures`,
+  );
+  await page
+    .getByRole("textbox", { name: "Find a picture" })
+    .fill("Mermaid magic");
+  await expect(
+    page.getByRole("button", { name: "Mermaid magic, medium", exact: true }),
+  ).toBeVisible();
 });
 
 test.describe("phone layout", () => {
@@ -292,7 +367,7 @@ test.describe("phone layout", () => {
     page,
   }) => {
     await page.goto("/");
-    await expect(page.locator(".drawing-card")).toHaveCount(35);
+    await expect(page.locator(".drawing-card")).toHaveCount(initialPageCount);
     await expectNoHorizontalOverflow(page);
     await openPicture(page, "Happy bunny");
     await expectNoHorizontalOverflow(page);

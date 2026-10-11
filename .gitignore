@@ -12,3 +12,5 @@ android/**/build/
 android/.idea/
 *.keystore
 *.jks
+__pycache__/
+*.pyc

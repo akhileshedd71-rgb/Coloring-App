@@ -1,0 +1,4 @@
+# Optional illustration regeneration tools; not required by the app or Android build.
+opencv-python-headless==5.0.0.93
+numpy==2.5.4
+Pillow==12.3.0

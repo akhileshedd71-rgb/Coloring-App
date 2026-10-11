@@ -87,7 +87,15 @@ async function savedArt(page: Page): Promise<Artwork | undefined> {
 
 async function bunny(page: Page) {
   await page.goto("/");
-  await page.getByRole("button", { name: "Let's make some magic" }).click();
+  await page
+    .getByRole("textbox", { name: "Find a picture" })
+    .fill("Happy bunny");
+  await page
+    .locator(".drawing-card")
+    .filter({
+      has: page.getByRole("heading", { name: "Happy bunny", exact: true }),
+    })
+    .click();
   await expect(
     page.getByRole("heading", { name: "Happy bunny", exact: true }),
   ).toBeVisible();
@@ -103,6 +111,16 @@ test("tap fills the chosen region and saves a picture that can be reopened", asy
   await expect.poll(() => pixel(page, 167, 352)).toEqual(turquoise);
   await expect.poll(() => pixel(page, 395, 560)).toEqual(white);
   await page.getByRole("button", { name: "All done!", exact: true }).click();
+  const finished = page.getByRole("dialog", {
+    name: "Your little masterpiece",
+  });
+  await expect(
+    finished.getByRole("img", { name: "Your finished artwork" }),
+  ).toBeVisible();
+  await finished
+    .getByRole("button", { name: "Keep coloring", exact: true })
+    .click();
+  await expect(finished).toHaveCount(0);
   await expect
     .poll(async () => (await savedArt(page))?.fills["bunny-14"])
     .toBe("#5DC9C5");
@@ -168,11 +186,18 @@ test("color by number rejects a mismatch and accepts the matching palette number
   await page.goto("/");
   await page.getByRole("button", { name: /Color by number/ }).click();
   await page
+    .getByRole("textbox", { name: "Find a picture" })
+    .fill("Happy bunny");
+  await page
     .locator(".drawing-card")
     .filter({
       has: page.getByRole("heading", { name: "Happy bunny", exact: true }),
     })
     .click();
+  await expect(
+    page.getByRole("button", { name: "Green number 4", exact: true }),
+  ).toHaveCount(0);
+  await expect(page.locator(".palette .color-swatch")).toHaveCount(4);
   await page
     .getByRole("button", { name: "Pink number 1", exact: true })
     .click();

@@ -12,16 +12,24 @@ export interface Region {
   color: string;
   number: number;
   label?: [number, number];
+  labelRadius?: number;
 }
 export interface Drawing {
   id: string;
   title: string;
   category: string;
-  difficulty: "easy" | "medium";
+  difficulty: "easy" | "medium" | "hard";
   background: string;
   regions: Region[];
   lines?: string[];
   accent: string;
+  /** Filled vector silhouette of generated line art, rendered instead of region borders. */
+  ink?: string;
+  thumbnail?: string;
+  source?: "illustrated";
+  /** Bundled detail asset loaded only when the picture is opened. */
+  asset?: string;
+  regionCount?: number;
 }
 export interface Stroke {
   tool: "brush" | "crayon" | "glitter" | "eraser";
@@ -55,7 +63,7 @@ export interface Profile {
 export interface Settings {
   sound: boolean;
   hints: boolean;
-  difficulty: "all" | "easy";
+  difficulty: "all" | "easy" | "medium" | "hard";
 }
 export const PALETTE = [
   "#FF6B79",
