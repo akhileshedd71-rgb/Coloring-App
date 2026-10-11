@@ -128,6 +128,9 @@ const categoryIcons: Record<string, string> = {
   Toys: "🧸",
   Flowers: "🌼",
   Patterns: "✿",
+  Paisley: "🪷",
+  Doodles: "✏️",
+  Cartoons: "🐼",
 };
 
 function LevelStars({ count }: { count: number }) {

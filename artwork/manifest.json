@@ -1,6 +1,259 @@
 {
-  "description": "Original generated illustration atlases. Row-major4x4 tiles are traced into independent vector coloring pages. Generation October2026. No third-party characters. Runtime bundles vector assets only.",
+  "description": "Original generated line-art source sheets. Explicit grids use row-major cells; null cells are unused. v1.2.0 adds 25 larger-tile illustrations with smooth Bezier tracing. The original 112 pages retain their legacy tracing for saved-art compatibility. Runtime bundles vector assets only.",
   "sheets": [
+    {
+      "path": "artwork/sources/v12-flowers-a.png",
+      "grid": [
+        2,
+        2
+      ],
+      "generation_prompt": "Generate a premium coloring book LINE ART source sheet. Pure black smooth sharp vector-like outlines on pure white. Every enclosed interior remains completely white, no color, gray, shading, hatching, gradients, background texture, letters, numbers, captions or watermarks. Confident continuous pen curves, consistent medium line weight, clean closed coloring boundaries, attractive professional composition. All subjects entirely inside their own panel with plenty of white margin. No panel borders. Clear wide white gutters between panels. Avoid tiny fussy marks; details should make enjoyable fillable regions. High-resolution, precise graphic linework, distinct premium original illustrations. 1. one large cheerful daisy with twelve broad petals, two leaves and a ladybug, very simple closed shapes; 2. three elegant tulips in a decorative rounded vase with three broad stripe bands; 3. three sunflowers in a woven picnic basket, broad seeds and clearly separated leaves; 4. a beautiful rose bouquet tied with a ribbon, flowing petals and well-defined leaves",
+      "pages": [
+        {
+          "id": "lineart-flowers-01",
+          "title": "Daisy Sunshine",
+          "category": "Flowers",
+          "accent": "#F8E4ED"
+        },
+        {
+          "id": "lineart-flowers-02",
+          "title": "Tulip Trio",
+          "category": "Flowers",
+          "accent": "#F8E4ED"
+        },
+        null,
+        {
+          "id": "lineart-flowers-03",
+          "title": "Rose and Ribbon",
+          "category": "Flowers",
+          "accent": "#F8E4ED"
+        }
+      ],
+      "tracing": "bezier"
+    },
+    {
+      "path": "artwork/sources/v12-flowers-b.png",
+      "grid": [
+        2,
+        2
+      ],
+      "generation_prompt": "Generate a premium coloring book LINE ART source sheet. Pure black smooth sharp vector-like outlines on pure white. Every enclosed interior remains completely white, no color, gray, shading, hatching, gradients, background texture, letters, numbers, captions or watermarks. Confident continuous pen curves, consistent medium line weight, clean closed coloring boundaries, attractive professional composition. All subjects entirely inside their own panel with plenty of white margin. No panel borders. Clear wide white gutters between panels. Avoid tiny fussy marks; details should make enjoyable fillable regions. High-resolution, precise graphic linework, distinct premium original illustrations. 1. a layered lotus blossom with large water lily pads inside an elegant circular composition; 2. a delicate teacup overflowing with daisies, poppies and leaves, beautifully balanced; 3. two tropical hibiscus blossoms with graceful broad leaves and a butterfly; 4. a lush peony bouquet with detailed curling petals and foliage, intricate but organized",
+      "pages": [
+        null,
+        null,
+        null,
+        {
+          "id": "lineart-flowers-04",
+          "title": "Peony Garden",
+          "category": "Flowers",
+          "accent": "#F8E4ED"
+        }
+      ],
+      "tracing": "bezier"
+    },
+    {
+      "path": "artwork/sources/v12-flowers-patterns.png",
+      "grid": [
+        2,
+        2
+      ],
+      "generation_prompt": "Generate a premium coloring book LINE ART source sheet. Pure black smooth sharp vector-like outlines on pure white. Every enclosed interior remains completely white, no color, gray, shading, hatching, gradients, background texture, letters, numbers, captions or watermarks. Confident continuous pen curves, consistent medium line weight, clean closed coloring boundaries, attractive professional composition. All subjects entirely inside their own panel with plenty of white margin. No panel borders. Clear wide white gutters between panels. Avoid tiny fussy marks; details should make enjoyable fillable regions. High-resolution, precise graphic linework, distinct premium original illustrations. 1. an elegant arching orchid stem in a patterned pot with large separated blossoms; 2. a circular wreath of spring blossoms, leaves and berries around an empty white center; 3. an elegant simple radial mandala of eight broad petal shapes and two rings of scallops, large fillable regions; 4. a beautifully balanced square arrangement of nested arches, broad bands and little circles, retro geometric coloring pattern",
+      "pages": [
+        null,
+        {
+          "id": "lineart-flowers-05",
+          "title": "Blossom Wreath",
+          "category": "Flowers",
+          "accent": "#F8E4ED"
+        },
+        {
+          "id": "lineart-patterns-01",
+          "title": "Petal Pinwheel",
+          "category": "Patterns",
+          "accent": "#E9E3F4"
+        },
+        {
+          "id": "lineart-patterns-02",
+          "title": "Rainbow Arches",
+          "category": "Patterns",
+          "accent": "#E9E3F4"
+        }
+      ],
+      "tracing": "bezier"
+    },
+    {
+      "path": "artwork/sources/v12-patterns-a.png",
+      "grid": [
+        2,
+        2
+      ],
+      "generation_prompt": "Generate a premium coloring book LINE ART source sheet. Pure black smooth sharp vector-like outlines on pure white. Every enclosed interior remains completely white, no color, gray, shading, hatching, gradients, background texture, letters, numbers, captions or watermarks. Confident continuous pen curves, consistent medium line weight, clean closed coloring boundaries, attractive professional composition. All subjects entirely inside their own panel with plenty of white margin. No panel borders. Clear wide white gutters between panels. Avoid tiny fussy marks; details should make enjoyable fillable regions. High-resolution, precise graphic linework, distinct premium original illustrations. 1. an eight-pointed star geometric mosaic with clear outlined diamonds and triangles, contained in a square; 2. a precise circular lotus mandala, concentric broad petals with graceful internal details; 3. an ornamental square of interlaced broad wavy ribbons forming almond-shaped white spaces; 4. a square mosaic of large hexagons containing different simple flowers and leaves, closed outlines",
+      "pages": [
+        {
+          "id": "lineart-patterns-03",
+          "title": "Star Mosaic",
+          "category": "Patterns",
+          "accent": "#E9E3F4"
+        },
+        {
+          "id": "lineart-patterns-04",
+          "title": "Lotus Mandala",
+          "category": "Patterns",
+          "accent": "#E9E3F4"
+        },
+        {
+          "id": "lineart-patterns-05",
+          "title": "Woven Waves",
+          "category": "Patterns",
+          "accent": "#E9E3F4"
+        },
+        null
+      ],
+      "tracing": "bezier"
+    },
+    {
+      "path": "artwork/sources/v12-paisley-a.png",
+      "grid": [
+        2,
+        2
+      ],
+      "tracing": "bezier",
+      "generation_prompt": "Pure black and white, sharp smooth line art for coloring, 2x2 source sheet. 1. one large elegant paisley teardrop, only three broad nested contours and one five-petal flower inside, extra simple large closed shapes for beginners, no tiny motifs; 2. two large mirrored paisley teardrops with broad scalloped edges and simple leaf interiors, clean elegant minimal ornament; 3. a circular rosette of six paisley teardrops, each containing one simple flower and two broad leaves; 4. a graceful decorative peacock whose tail consists of five ornate broad paisley feathers, beautiful clear enclosed patterns",
+      "pages": [
+        {
+          "id": "lineart-paisley-01",
+          "title": "Paisley Sprout",
+          "category": "Paisley",
+          "accent": "#ECE2F5"
+        },
+        {
+          "id": "lineart-paisley-02",
+          "title": "Twin Paisley",
+          "category": "Paisley",
+          "accent": "#ECE2F5"
+        },
+        {
+          "id": "lineart-paisley-03",
+          "title": "Paisley Petals",
+          "category": "Paisley",
+          "accent": "#ECE2F5"
+        },
+        {
+          "id": "lineart-paisley-04",
+          "title": "Paisley Peacock",
+          "category": "Paisley",
+          "accent": "#ECE2F5"
+        }
+      ]
+    },
+    {
+      "path": "artwork/sources/v12-paisley-doodles.png",
+      "grid": [
+        2,
+        2
+      ],
+      "tracing": "bezier",
+      "generation_prompt": "Pure black and white, sharp smooth line art for coloring, 2x2 source sheet. 1. a refined square textile composition of interlocking paisley motifs, floral centers and scalloped borders, intricate but clearly organized; 2. a cheerful contained arrangement of a smiling mug, open book, cozy socks, candle and three stars, simple doodle outlines, large closed shapes; 3. a cute group of smiling popcorn, donut, cupcake and bubble tea characters, clean chubby outlines and readable expressions; 4. a joyful arranged doodle cluster of mushrooms, flowers, snail, watering can and ladybugs",
+      "pages": [
+        {
+          "id": "lineart-paisley-05",
+          "title": "Paisley Tapestry",
+          "category": "Paisley",
+          "accent": "#ECE2F5"
+        },
+        {
+          "id": "lineart-doodles-01",
+          "title": "Cozy Little Things",
+          "category": "Doodles",
+          "accent": "#FFF1D9"
+        },
+        {
+          "id": "lineart-doodles-02",
+          "title": "Happy Snack Club",
+          "category": "Doodles",
+          "accent": "#FFF1D9"
+        },
+        {
+          "id": "lineart-doodles-03",
+          "title": "Garden Doodle Party",
+          "category": "Doodles",
+          "accent": "#FFF1D9"
+        }
+      ]
+    },
+    {
+      "path": "artwork/sources/v12-doodles-cartoons.png",
+      "grid": [
+        2,
+        2
+      ],
+      "tracing": "bezier",
+      "generation_prompt": "Pure black and white, sharp smooth line art for coloring, 2x2 source sheet. 1. a playful cute doodle arrangement of rocket, ringed planet, friendly alien, astronaut helmet, moon and stars; 2. a cute readable doodle composition of smiling whale, jellyfish, octopus, shells and coral; 3. an adorable original chubby puppy sitting in a large simple teacup with one heart emblem, extra simple large closed regions for beginners; 4. an original cheerful cartoon penguin wearing a scarf and roller skates, dynamic cute pose, large simple coloring shapes",
+      "pages": [
+        {
+          "id": "lineart-doodles-04",
+          "title": "Space Doodle Adventure",
+          "category": "Doodles",
+          "accent": "#FFF1D9"
+        },
+        {
+          "id": "lineart-doodles-05",
+          "title": "Ocean Doodle Friends",
+          "category": "Doodles",
+          "accent": "#FFF1D9"
+        },
+        {
+          "id": "lineart-cartoons-01",
+          "title": "Pudding Puppy",
+          "category": "Cartoons",
+          "accent": "#E2F1ED"
+        },
+        {
+          "id": "lineart-cartoons-02",
+          "title": "Skating Penguin",
+          "category": "Cartoons",
+          "accent": "#E2F1ED"
+        }
+      ]
+    },
+    {
+      "path": "artwork/sources/v12-cartoons-a.png",
+      "grid": [
+        2,
+        2
+      ],
+      "tracing": "bezier",
+      "generation_prompt": "Pure black and white, sharp smooth line art for coloring, 2x2 source sheet. 1. an adorable original kitten sleeping on a fluffy cloud, with a crescent moon and three large stars, simple clean broad closed regions; 2. an original cute bunny baker in a chef hat and apron holding a cupcake, mixing bowl beside it; 3. an adorable original rounded robot watering flowers in pots, well-defined mechanical panels and charming face; 4. two original cute fox friends enjoying tea at a small outdoor table, floral teapot and pastries",
+      "pages": [
+        {
+          "id": "lineart-cartoons-03",
+          "title": "Cloud Kitten",
+          "category": "Cartoons",
+          "accent": "#E2F1ED"
+        },
+        {
+          "id": "lineart-cartoons-04",
+          "title": "Cupcake Bunny",
+          "category": "Cartoons",
+          "accent": "#E2F1ED",
+          "seals": [
+            [
+              356,
+              258,
+              347,
+              270
+            ]
+          ]
+        },
+        {
+          "id": "lineart-cartoons-05",
+          "title": "Robot Gardener",
+          "category": "Cartoons",
+          "accent": "#E2F1ED"
+        },
+        null
+      ]
+    },
     {
       "path": "artwork/sources/woodland.png",
       "pages": [

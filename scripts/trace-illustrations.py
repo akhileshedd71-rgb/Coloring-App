@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Turn original 4-by-4 line-art atlases into offline, paintable SVG pages.
+"""Turn original line-art atlases into offline, paintable SVG pages.
 
 Usage: PYTHONPATH=/workspace/.tools/lineart-python python scripts/trace-illustrations.py \
     artwork/manifest.json --review-dir /tmp/lineart-review
@@ -33,6 +33,9 @@ CATEGORY_COLORS = {
     "On the go": [6, 1, 3, 5, 2], "Yummy": [1, 3, 8, 4, 2],
     "Nature": [4, 3, 8, 5, 1], "Space": [6, 7, 3, 2, 5],
     "Adventure": [6, 4, 3, 2, 8],
+    "Flowers": [8, 4, 3, 7, 1], "Patterns": [5, 7, 3, 8, 6],
+    "Paisley": [7, 5, 8, 3, 1], "Doodles": [3, 5, 1, 7, 4],
+    "Cartoons": [2, 5, 8, 4, 3],
 }
 
 
@@ -48,7 +51,7 @@ def boundary(projection: np.ndarray, target: float, radius: int) -> int:
     return int(round(float(np.mean(group)))) + lo
 
 
-def split_sheet(gray: np.ndarray) -> list[np.ndarray]:
+def split_sheet(gray: np.ndarray, grid: tuple[int, int] = (4, 4)) -> list[np.ndarray]:
     """Group whole ink components, so a tail or ear across a grid line survives.
 
     The generated atlas is visually a grid but its gutters aren't perfectly
@@ -57,20 +60,21 @@ def split_sheet(gray: np.ndarray) -> list[np.ndarray]:
     """
     ink = (gray < 165).astype(np.uint8)
     h, w = ink.shape
-    rows = [0] + [boundary(ink.sum(axis=1), h * n / 4, round(h * .055))
-                  for n in range(1, 4)] + [h]
+    row_count, column_count = grid
+    rows = [0] + [boundary(ink.sum(axis=1), h * n / row_count, round(h * .055))
+                  for n in range(1, row_count)] + [h]
     columns = [[0] + [boundary(ink[rows[r]:rows[r + 1]].sum(axis=0),
-                                  w * n / 4, round(w * .055))
-                         for n in range(1, 4)] + [w] for r in range(4)]
+                                  w * n / column_count, round(w * .055))
+                         for n in range(1, column_count)] + [w] for r in range(row_count)]
     count, labels, stats, centers = cv2.connectedComponentsWithStats(ink, connectivity=8)
-    assignments = [[] for _ in range(16)]
+    assignments = [[] for _ in range(row_count * column_count)]
     for component in range(1, count):
         if stats[component, cv2.CC_STAT_AREA] < 2:
             continue
         x, y = centers[component]
-        row = min(3, max(0, int(np.searchsorted(rows, y, side="right")) - 1))
-        col = min(3, max(0, int(np.searchsorted(columns[row], x, side="right")) - 1))
-        assignments[row * 4 + col].append(component)
+        row = min(row_count - 1, max(0, int(np.searchsorted(rows, y, side="right")) - 1))
+        col = min(column_count - 1, max(0, int(np.searchsorted(columns[row], x, side="right")) - 1))
+        assignments[row * column_count + col].append(component)
     pages = []
     for ids in assignments:
         mask = np.isin(labels, ids).astype(np.uint8)
@@ -78,7 +82,7 @@ def split_sheet(gray: np.ndarray) -> list[np.ndarray]:
         if len(xs) == 0:
             raise ValueError("Atlas has an empty cell")
         x0, x1, y0, y1 = xs.min(), xs.max() + 1, ys.min(), ys.max() + 1
-        if x1 - x0 > w * .43 or y1 - y0 > h * .43:
+        if x1 - x0 > w * (1 / column_count + .18) or y1 - y0 > h * (1 / row_count + .18):
             raise ValueError("Ink connects neighboring atlas cells; review the source")
         pages.append(np.pad(mask[y0:y1, x0:x1], 8))
     return pages
@@ -118,7 +122,15 @@ def vector_path(mask: np.ndarray, scale: float, offset: tuple[float, float],
     return "".join(paths)
 
 
-def trace_page(mask: np.ndarray, metadata: dict, index: int) -> tuple[dict, dict, Image.Image]:
+def trace_page(mask: np.ndarray, metadata: dict, index: int,
+               tracing: str = "legacy") -> tuple[dict, dict, Image.Image]:
+    if tracing == "bezier":
+        from smooth_lineart import smooth_path
+        trace = smooth_path
+    elif tracing == "legacy":
+        trace = vector_path
+    else:
+        raise ValueError(f"Unknown tracing profile: {tracing}")
     mask = mask.copy()
     for x1, y1, x2, y2 in metadata.get("seals", []):
         cv2.line(mask, (x1, y1), (x2, y2), 1, 2)
@@ -162,7 +174,7 @@ def trace_page(mask: np.ndarray, metadata: dict, index: int) -> tuple[dict, dict
             rim = cv2.dilate(interior, np.ones((3, 3), np.uint8)) - interior
             mask |= rim
             rescued_count += 1
-    silhouette = vector_path(mask, scale, offset)
+    silhouette = trace(mask, scale, offset)
     regions = []
     review = np.full((h, w, 3), 255, dtype=np.uint8)
     region_sizes = []
@@ -179,7 +191,7 @@ def trace_page(mask: np.ndarray, metadata: dict, index: int) -> tuple[dict, dict
         # Paint extends one source pixel underneath the original ink, preventing
         # white halos. Compounds preserve holes such as eyes and leaf interiors.
         expanded = cv2.dilate(interior, np.ones((3, 3), np.uint8))
-        d = vector_path(expanded, scale, offset)
+        d = trace(expanded, scale, offset)
         if not d:
             continue
         # The two largest areas share a calm primary color; smaller decorations
@@ -239,14 +251,20 @@ def main() -> None:
             candidates = [manifest_path.parent / source, args.output_root / source, source]
             source = next((candidate for candidate in candidates if candidate.exists()), candidates[0])
         gray = np.asarray(Image.open(source).convert("L"))
-        if len(sheet["pages"]) != 16:
-            raise ValueError(f"{source}: expected sixteen pages")
-        masks = split_sheet(gray)
+        grid = sheet.get("grid", [4, 4])
+        if (len(grid) != 2 or any(type(n) is not int or n < 1 or n > 8 for n in grid)
+                or len(sheet["pages"]) != grid[0] * grid[1]):
+            raise ValueError(f"{source}: grid must match the number of pages")
+        masks = split_sheet(gray, tuple(grid))
         for mask, metadata in zip(masks, sheet["pages"]):
+            # A null cell preserves its place in a source sheet while excluding
+            # unused artwork from the shipped catalog and runtime assets.
+            if metadata is None:
+                continue
             if metadata["id"] in ids:
                 raise ValueError(f"Duplicate page id: {metadata['id']}")
             ids.add(metadata["id"])
-            drawing, report, preview = trace_page(mask, metadata, len(drawings))
+            drawing, report, preview = trace_page(mask, metadata, len(drawings), sheet.get("tracing", "legacy"))
             drawings.append(drawing)
             reports.append(report)
             previews.append(preview)

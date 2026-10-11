@@ -1439,7 +1439,7 @@ export default function App() {
             </span>
           </div>
           <p className="fine-print">
-            An original independent app. No account needed. Version 1.1.0.
+            An original independent app. No account needed. Version 1.2.0.
           </p>
         </Modal>
       )}

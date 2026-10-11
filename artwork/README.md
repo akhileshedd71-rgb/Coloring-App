@@ -1,14 +1,16 @@
 # Original illustrated coloring pages
 
-Version 1.1.0 adds 112 original generated illustrations to the app's 35 classic vector drawings. The complete catalog has 147 pages across nine categories. The seven source atlases contain sixteen pictures each, arranged in a 4×4 grid. They were generated for Little Color Club and do not use third-party characters.
+Version 1.2.0 adds 25 sharp line-art illustrations in Flowers, Patterns, Paisley, Doodles, and Cartoons (5 in each category). The complete catalog has 172 pages across 14 categories: 137 generated illustrations and 35 classic vector drawings. The new illustrations use eight 2×2 source sheets with selected cells, giving each drawing more source pixels than the original seven 4×4 atlases. All were generated for Little Color Club.
 
-The source images are preserved in `sources/`. `manifest.json` associates each cell, in row-major order, with a stable ID, title, category, and accent color. The manifest also records reviewed boundary repairs as `seals`. Source PNGs are development assets; the app packages only the generated vector thumbnails and paint data.
+The source images are preserved in `sources/`. `manifest.json` associates each cell, in row-major order, using each sheet’s `grid: [rows, columns]` (default `[4, 4]`), with a stable ID, title, category, and accent color. The manifest also records reviewed boundary repairs as `seals`. A `null` page skips an unused source cell; only selected illustrations are shipped. Source PNGs are development assets; the app packages only the generated vector thumbnails and paint data.
 
 ## Regenerate the pages
 
 Python is needed only to regenerate illustrations. Normal web development, Android builds, and the app itself use the committed generated files and do not need these packages.
 
-The tracing pipeline was run with Python 3.12 and the exact package versions in `requirements.txt`. From the repository root:
+The tracing pipeline was run with Python 3.12 and the exact package versions in `requirements.txt`. New sheets marked `tracing: "bezier"` also use the system Potrace 1.16 library to fit smooth cubic curves. On Debian/Ubuntu, install the development-only `libpotrace0` package; macOS users can install `potrace` with Homebrew. This library is already installed in the current cloud environment. It is not bundled into the Android app.
+
+From the repository root:
 
 ```bash
 python3 -m venv /tmp/little-color-art-venv
@@ -38,6 +40,8 @@ PYTHONPATH=/workspace/.tools/lineart-python python3 scripts/trace-illustrations.
 ## How the tracing works
 
 The script locates atlas gutters and assigns complete connected ink components to cells, helping preserve ears, tails, and leaves near a cell edge. It traces enclosed white regions and keeps the illustration's ink as a separate compound vector path. Small gap closing and selective recovery of larger regions help form usable fill boundaries. Every compound region and ink path must use the **even-odd** fill rule.
+
+The 25 new pages use `scripts/smooth_lineart.py` and Potrace's C API to fit cubic Bezier curves, retaining sharp corners and holes while removing raster stair steps. Original sheets keep the default `legacy` profile so their existing regions and saved artwork remain compatible. The source cells use the same mask for both ink and paint-region tracing. SVG previews contain only a white background and the ink silhouette; suggested palette colors are used only after coloring begins. Colored montages are temporary developer checks for missed regions, not shipped artwork.
 
 Number labels are placed at the deepest point inside each detected region; each label records the available radius. Very small details are omitted from fill detection rather than receiving unusable regions. The generated difficulty is determined by the final fillable-region count: easy has up to 25 regions, medium has 26–70, and hard has more than 70. This computed level overrides the initial difficulty suggestion in the manifest.
 

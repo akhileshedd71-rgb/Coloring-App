@@ -1,4 +1,5 @@
 # Optional illustration regeneration tools; not required by the app or Android build.
+# Bezier sheets also require the system libpotrace0 library (see README.md).
 opencv-python-headless==5.0.0.93
 numpy==2.5.4
 Pillow==12.3.0

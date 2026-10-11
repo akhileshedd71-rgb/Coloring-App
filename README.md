@@ -5,20 +5,20 @@ A happy, offline coloring app for little artists, built for Android phones and t
 <p align="center">
   <img src="docs/home.png" width="280" alt="Little Color Club home screen" />
   <img src="docs/library.png" width="280" alt="Illustrated coloring pages with easy, medium, and hard filters" />
-  <img src="docs/painting.png" width="280" alt="The coloring studio with painting and zoom controls" />
+  <img src="docs/line-art.png" width="280" alt="Uncolored paisley page with sharp vector outlines" />
 </p>
 
 ## Try it on Android
 
-**[Download the v1.1.0 test APK](https://github.com/akhileshedd71-rgb/Coloring-App/raw/refs/heads/main/downloads/little-color-club-debug.apk)**
+**[Download the v1.2.0 test APK](https://github.com/akhileshedd71-rgb/Coloring-App/raw/refs/heads/main/downloads/little-color-club-debug.apk)**
 
 Open that link on your Android device, download the APK, and open it to install. Android may ask you to allow installation from your browser or file manager. This is a debug-signed test build, suitable for trying the app; it is not a Play Store release. Android 6.0+ with an up-to-date Android System WebView is required. Android 7+ is recommended.
 
-The `downloads/` folder contains the v1.1.0 test build and its SHA-256 checksum. Pushes also produce an APK under **Actions → Test and build Android → Artifacts**.
+The `downloads/` folder contains the v1.2.0 test build and its SHA-256 checksum. Pushes also produce an APK under **Actions → Test and build Android → Artifacts**.
 
 ## What's inside
 
-- **147 coloring pages:** 112 new original generated illustrations alongside 35 classic vector drawings. Explore nine categories: Animals, Ocean, Nature, Space, Yummy, On the go, Magic, Dinosaurs, and Adventure.
+- **172 coloring pages:** 137 original generated illustrations alongside 35 classic vector drawings. Explore 14 categories, including **25 new sharp line-art pages**: 5 each in Flowers, Patterns, Paisley, Doodles, and Cartoons. The existing Animals, Ocean, Nature, Space, Yummy, On the go, Magic, Dinosaurs, and Adventure collections are included.
 - **Easy, medium, and hard:** choose a level, browse categories, or search. Pages appear in batches of 24, and the library remembers your filters when you return from coloring. A grown-up can limit the library to one exact difficulty level.
 - **Tap & color:** fill enclosed spaces with a spreading color animation and a small burst of sparkles.
 - **Magic paint:** smooth brushes, textured crayons, sparkly paint, 12 stickers, and an eraser.
